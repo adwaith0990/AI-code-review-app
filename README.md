@@ -1,4 +1,4 @@
-# AI Code Review App (Flask)
+# AI Code Review App 
 Reviews Python code with Ruff, Bandit and AST checks, scores it 0-100, and exports JSON/TXT reports.
 
 ## Run
