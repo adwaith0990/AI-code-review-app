@@ -2,4 +2,7 @@ flask>=3.0
 ruff>=0.5
 bandit>=1.7
 pytest>=8.0
+<<<<<<< HEAD
 gunicorn
+=======
+>>>>>>> 7032d8a940734f66304f133437c4eb5cc6bfea9a

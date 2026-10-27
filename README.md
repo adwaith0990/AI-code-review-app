@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # AI Code Review App (Flask)
+=======
+# AI Code Review App 
+>>>>>>> 7032d8a940734f66304f133437c4eb5cc6bfea9a
 Reviews Python code with Ruff, Bandit and AST checks, scores it 0-100, and exports JSON/TXT reports.
 
 ## Run
