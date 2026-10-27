@@ -1,5 +1,5 @@
-Flask
+flask>=3.0
+ruff>=0.5
+bandit>=1.7
+pytest>=8.0
 gunicorn
-ruff
-bandit
-pytest
