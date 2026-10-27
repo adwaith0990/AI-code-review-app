@@ -1,54 +1,46 @@
-const CACHE_NAME = "code-review-app-v1";
+const CACHE_NAME = "ai-code-review-v1";
+
+const APP_FILES = [
+    "/",
+    "/static/manifest.json"
+];
 
 self.addEventListener("install", (event) => {
-event.waitUntil(
-caches.open(CACHE_NAME).then((cache) =>
-cache.addAll(["/"])
-)
-);
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(APP_FILES);
+        })
+    );
 
-self.skipWaiting();
+    self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-event.waitUntil(
-caches.keys().then((keys) =>
-Promise.all(
-keys
-.filter((key) => key !== CACHE_NAME)
-.map((key) => caches.delete(key))
-)
-)
-);
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames
+                    .filter((name) => name !== CACHE_NAME)
+                    .map((name) => caches.delete(name))
+            );
+        })
+    );
 
-self.clients.claim();
+    self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
-const request = event.request;
+    if (event.request.method !== "GET") {
+        return;
+    }
 
-if (
-request.method !== "GET" ||
-new URL(request.url).origin !== self.location.origin
-) {
-return;
-}
+    const url = new URL(event.request.url);
 
-event.respondWith(
-fetch(request).catch(async () => {
-const cached = await caches.match(request);
+    if (url.origin !== self.location.origin) {
+        return;
+    }
 
-```
-  if (cached) {
-    return cached;
-  }
-
-  return new Response("You are offline. Please reconnect to use code review.", {
-    status: 503,
-    headers: { "Content-Type": "text/plain; charset=utf-8" }
-  });
-})
-```
-
-);
+    event.respondWith(
+        fetch(event.request).catch(() => caches.match(event.request))
+    );
 });

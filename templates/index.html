@@ -1,55 +1,14 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Code Review</title>
-<style>
-
-<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-<meta name="theme-color" content="#0f172a">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#1f2937}
-textarea{width:100%;height:240px;font-family:monospace;padding:.5rem}
-button{background:#2563eb;color:#fff;border:0;padding:.6rem 1.2rem;border-radius:6px;cursor:pointer}
-.err{background:#fee2e2;padding:.8rem;border-radius:6px}.warn{background:#fef3c7;padding:.8rem;border-radius:6px}
-.score{font-size:3rem;font-weight:700}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin-bottom:1rem}
-.card{border:1px solid #e5e7eb;border-radius:8px;padding:.8rem}
-table{width:100%;border-collapse:collapse;margin-top:1rem}td,th{border-bottom:1px solid #e5e7eb;padding:.5rem;text-align:left;vertical-align:top}
-.b{padding:2px 8px;border-radius:10px;color:#fff;font-size:.8rem}
-.Critical{background:#991b1b}.High{background:#dc2626}.Medium{background:#d97706}.Low{background:#6b7280}
-code{background:#f3f4f6;padding:1px 4px}
-</style></head><body>
-<h1>AI Code Review</h1>
-<form method="post" enctype="multipart/form-data">
-  <textarea name="code" placeholder="Paste Python code here...">{{ code }}</textarea>
-  <p>or upload: <input type="file" name="file" accept=".py"></p>
-  <button>Review code</button>
-</form>
-{% if error %}<p class="err">{{ error }}</p>{% endif %}
-{% if result %}
-  {% for w in result.warnings %}<p class="warn">{{ w }}</p>{% endfor %}
-  <h2>Overall score</h2><div class="score">{{ result.overall }}/100</div>
-  <div class="grid">{% for k,v in result.categories.items() %}
-    <div class="card"><b>{{ result.labels[k] }}</b><br>{{ v }}/100</div>{% endfor %}</div>
-  <form method="post" action="/download/json" style="display:inline"><input type="hidden" name="result" value="{{ result_json }}"><button>Download JSON</button></form>
-  <form method="post" action="/download/txt" style="display:inline"><input type="hidden" name="result" value="{{ result_json }}"><button>Download TXT</button></form>
-  <h2>Automated findings ({{ result.findings|length }})</h2>
-  <table><tr><th>Severity</th><th>Rule</th><th>Line</th><th>Issue and fix</th></tr>
-  {% for f in result.findings %}<tr>
-    <td><span class="b {{ f.severity }}">{{ f.severity }}</span></td>
-    <td>{{ f.rule }}<br><small>{{ f.source }}</small></td><td>{{ f.line }}</td>
-    <td>{{ f.message }}{% if f.snippet %}<br><code>{{ f.snippet }}</code>{% endif %}<br><small>Fix: {{ f.fix }}</small></td>
-  </tr>{% endfor %}</table>
-{% endif %}
-
 <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/static/service-worker.js")
-        .catch((error) => {
-          console.error("Service worker registration failed:", error);
-        });
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+        try {
+            const registration =
+                await navigator.serviceWorker.register("/service-worker.js");
+
+            console.log("Service worker registered:", registration.scope);
+        } catch (error) {
+            console.error("Service worker registration failed:", error);
+        }
     });
-  }
+}
 </script>
-</body></html>
