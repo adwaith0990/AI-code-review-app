@@ -3,3 +3,7 @@ ruff>=0.5
 bandit>=1.7
 pytest>=8.0
 gunicorn
+Flask
+gunicorn
+ruff
+bandit

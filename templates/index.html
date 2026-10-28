@@ -1,3 +1,1130 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>CodeLens AI | Python Code Review</title>
+    <meta name="theme-color" content="#0b1020">
+    <meta name="description" content="Analyze Python code quality, security, and maintainability.">
+
+    <style>
+        :root {
+            --bg: #0b1020;
+            --panel: #111a2e;
+            --panel2: #16223a;
+            --border: #27344d;
+            --text: #edf2ff;
+            --muted: #93a4bf;
+            --purple: #9b87ff;
+            --cyan: #4dd8f0;
+            --green: #40d9a2;
+            --red: #fb7185;
+            --yellow: #fbbf24;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 5% 0%, #30205a55, transparent 36%),
+                radial-gradient(ellipse at 95% 15%, #07598535, transparent 30%),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        button, textarea, input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 6%;
+            background: #0b1020eF;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            width: 41px;
+            height: 41px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            box-shadow: 0 5px 22px #8b5cf633;
+        }
+
+        .brand-accent {
+            color: var(--purple);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 12px #40d9a277;
+        }
+
+        .container {
+            width: min(1100px, 92%);
+            margin: auto;
+        }
+
+        .hero {
+            padding: 53px 0 35px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            display: inline-block;
+            padding: 6px 13px;
+            border: 1px solid #9b87ff44;
+            border-radius: 25px;
+            background: #9b87ff12;
+            color: #c4b5fd;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            margin: 17px 0 12px;
+            font-size: clamp(34px, 5vw, 55px);
+            line-height: 1.12;
+            letter-spacing: -1.8px;
+        }
+
+        .gradient {
+            color: var(--purple);
+            background: linear-gradient(90deg, #b6a5ff, #4dd8f0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            max-width: 640px;
+            margin: auto;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 22px;
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .panel {
+            margin-bottom: 23px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 17px;
+            background: #111a2eeF;
+            box-shadow: 0 20px 60px #00000020;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 19px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .panel-body {
+            padding: 22px;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dots span {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--red);
+        }
+
+        .dots span:nth-child(2) {
+            background: var(--yellow);
+        }
+
+        .dots span:nth-child(3) {
+            background: var(--green);
+        }
+
+        .label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 9px;
+            border: 1px solid #4dd8f044;
+            border-radius: 7px;
+            background: #4dd8f00e;
+            color: var(--cyan);
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .editor {
+            overflow: hidden;
+            border: 1px solid #2c3a56;
+            border-radius: 12px;
+            background: #080d19;
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 270px;
+            padding: 18px;
+            resize: vertical;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: #dbeafe;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            tab-size: 4;
+        }
+
+        textarea:focus {
+            box-shadow: inset 0 0 0 1px var(--purple);
+        }
+
+        textarea::placeholder {
+            color: #5d6b84;
+        }
+
+        .editor-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 9px 14px;
+            border-top: 1px solid #253149;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .upload {
+            margin-top: 20px;
+            padding: 19px;
+            border: 1px dashed #485879;
+            border-radius: 12px;
+            background: #9b87ff08;
+            text-align: center;
+            transition: background .2s, border-color .2s;
+        }
+
+        .upload.dragover {
+            border-color: var(--cyan);
+            background: #4dd8f015;
+        }
+
+        .upload-icon {
+            margin-bottom: 7px;
+            font-size: 26px;
+        }
+
+        .upload p {
+            margin: 3px 0;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .upload input {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .upload input::file-selector-button {
+            margin-right: 9px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--panel2);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .selected-file {
+            display: none;
+            margin-top: 10px;
+            color: var(--green);
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 43px;
+            padding: 10px 17px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 750;
+            text-decoration: none;
+            transition: transform .2s, filter .2s;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn:focus-visible {
+            outline: 3px solid var(--cyan);
+            outline-offset: 3px;
+        }
+
+        .primary {
+            flex: 1;
+            background: linear-gradient(100deg, #7c3aed, #6366f1);
+            color: white;
+            box-shadow: 0 6px 22px #6366f133;
+        }
+
+        .reset, .new-review {
+            border-color: #3b4964;
+            background: #1a2740;
+            color: #e2e8f0;
+        }
+
+        .error {
+            margin-bottom: 19px;
+            padding: 13px 15px;
+            border: 1px solid #fb718544;
+            border-radius: 10px;
+            background: #fb718510;
+            color: #fda4af;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .warning {
+            margin-top: 14px;
+            padding: 13px 15px;
+            border: 1px solid #fbbf2440;
+            border-radius: 10px;
+            background: #fbbf240d;
+            color: #fcd34d;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .metric {
+            padding: 19px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: #0c1426;
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .metric-value {
+            margin-top: 5px;
+            font-size: 32px;
+            font-weight: 850;
+            letter-spacing: -1px;
+        }
+
+        .metric-value small {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+
+        .score-good {
+            color: var(--green);
+        }
+
+        .score-medium {
+            color: var(--yellow);
+        }
+
+        .score-low {
+            color: var(--red);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 13px;
+            margin-top: 18px;
+        }
+
+        .category {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #0c1426;
+        }
+
+        .category-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .category-score {
+            white-space: nowrap;
+            color: #dbeafe;
+        }
+
+        .progress {
+            height: 7px;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #263149;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #8b5cf6, #22d3ee);
+            transition: width .6s ease;
+        }
+
+        .findings-heading {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 28px;
+        }
+
+        .findings-heading h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .finding-count {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .finding {
+            margin-top: 13px;
+            padding: 17px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #0c1426;
+        }
+
+        .finding-top {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .severity {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 9px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+
+        .severity-critical {
+            background: #fb71851c;
+            color: #fb7185;
+        }
+
+        .severity-high {
+            background: #f973161c;
+            color: #fb923c;
+        }
+
+        .severity-medium {
+            background: #fbbf241b;
+            color: #fbbf24;
+        }
+
+        .severity-low {
+            background: #4dd8f016;
+            color: #67e8f9;
+        }
+
+        .rule {
+            color: #c4b5fd;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+
+        .line-badge {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .finding-message {
+            margin: 12px 0 0;
+            color: #e2e8f0;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .finding-meta {
+            margin-top: 9px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .fix {
+            margin-top: 12px;
+            padding: 11px 13px;
+            border-left: 3px solid var(--green);
+            border-radius: 0 8px 8px 0;
+            background: #40d9a20b;
+            color: #b7f7de;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .snippet {
+            margin-top: 10px;
+            padding: 11px;
+            border-radius: 8px;
+            background: #070c17;
+            color: #a5b4fc;
+            font-family: Consolas, monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .empty {
+            margin-top: 16px;
+            padding: 25px;
+            border: 1px solid #40d9a233;
+            border-radius: 12px;
+            background: #40d9a208;
+            color: #a7f3d0;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .download-btn {
+            border-color: #40d9a233;
+            background: #40d9a20e;
+            color: #6ee7b7;
+        }
+
+        .tips {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin: 25px 0 45px;
+        }
+
+        .tip {
+            padding: 17px;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            background: #111a2e99;
+        }
+
+        .tip-icon {
+            margin-bottom: 7px;
+            font-size: 22px;
+        }
+
+        .tip h3 {
+            margin: 0 0 5px;
+            font-size: 13px;
+        }
+
+        .tip p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        footer {
+            padding: 23px 10px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            text-align: center;
+            font-size: 12px;
+        }
+
+        @media (max-width: 650px) {
+            .topbar {
+                padding: 12px 4%;
+            }
+
+            .brand {
+                font-size: 16px;
+            }
+
+            .brand-icon {
+                width: 35px;
+                height: 35px;
+            }
+
+            .status {
+                font-size: 10px;
+            }
+
+            .hero {
+                padding-top: 38px;
+            }
+
+            .panel-header, .panel-body {
+                padding: 16px;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid, .tips {
+                grid-template-columns: 1fr;
+            }
+
+            textarea {
+                min-height: 230px;
+            }
+
+            .buttons .btn {
+                flex: 1 1 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">
+        <span class="brand-icon">⌘</span>
+        <span>CodeLens <span class="brand-accent">AI</span></span>
+    </a>
+
+    <div class="status">
+        <span class="status-dot"></span>
+        Python Review Workspace
+    </div>
+</nav>
+
+<main class="container">
+
+    <header class="hero">
+        <div class="eyebrow">✦ Intelligent Code Analysis</div>
+
+        <h1>
+            Write better code.<br>
+            <span class="gradient">Ship with confidence.</span>
+        </h1>
+
+        <p>
+            Analyze your Python code, uncover security concerns,
+            and discover opportunities to improve quality and maintainability.
+        </p>
+
+        <div class="features">
+            <span>✓ Code Quality</span>
+            <span>✓ Security Checks</span>
+            <span>✓ Actionable Findings</span>
+        </div>
+    </header>
+
+    <section class="panel" id="editorPanel">
+        <div class="panel-header">
+            <div>
+                <h2>Code Workspace</h2>
+                <div class="muted">Paste Python code or select a .py file.</div>
+            </div>
+            <div class="dots" aria-label="Editor status">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="panel-body">
+
+            {% if error %}
+            <div class="error" role="alert">
+                <strong>Unable to review:</strong> {{ error }}
+            </div>
+            {% endif %}
+
+            <form id="reviewForm"
+                  method="POST"
+                  action="{{ url_for('index') }}"
+                  enctype="multipart/form-data">
+
+                <div class="label-row">
+                    <label for="code">01 / Python source code</label>
+                    <span class="badge">PYTHON</span>
+                </div>
+
+                <div class="editor">
+                    <textarea
+                        id="code"
+                        name="code"
+                        spellcheck="false"
+                        autocapitalize="off"
+                        autocomplete="off"
+                        placeholder="# Paste your Python code here&#10;&#10;def greet(name):&#10;    return f'Hello, {name}!'&#10;&#10;print(greet('Developer'))"
+                    >{{ code or '' }}</textarea>
+
+                    <div class="editor-footer">
+                        <span>UTF-8 · Python</span>
+                        <span id="lineCount">1 line</span>
+                    </div>
+                </div>
+
+                <div class="upload" id="uploadZone">
+                    <div class="upload-icon">📂</div>
+                    <p>Upload an existing Python file</p>
+                    <div class="muted">Select or drag a .py file below</div>
+
+                    <input
+                        type="file"
+                        name="file"
+                        id="file"
+                        accept=".py"
+                        aria-label="Choose Python file"
+                    >
+
+                    <div class="selected-file" id="selectedFile"></div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn primary" id="reviewBtn" type="submit">
+                        ✦ <span id="reviewBtnText">Analyze My Code</span> →
+                    </button>
+
+                    <button type="button" id="resetBtn" class="reset-btn">
+                      ↻ Reset
+                    </button>
+                </div>
+
+                <p class="muted" style="margin: 12px 0 0;">
+                    Analysis is provided by the tools configured in your
+                    existing Python backend.
+                </p>
+
+            </form>
+        </div>
+    </section>
+
+    {% if result %}
+    <section class="panel" id="reviewResults">
+
+        <div class="panel-header">
+            <div>
+                <h2>Analysis Dashboard</h2>
+                <div class="muted">Your code review results</div>
+            </div>
+            <span class="badge">REVIEW COMPLETE</span>
+        </div>
+
+        <div class="panel-body">
+
+            <div class="metrics">
+                <article class="metric">
+                    <div class="metric-label">Overall Score</div>
+                    <div class="metric-value
+                        {% if result.overall >= 80 %}score-good
+                        {% elif result.overall >= 60 %}score-medium
+                        {% else %}score-low{% endif %}">
+                        {{ result.overall }}<small> / 100</small>
+                    </div>
+                    <div class="muted">Higher is better</div>
+                </article>
+
+                <article class="metric">
+                    <div class="metric-label">Total Findings</div>
+                    <div class="metric-value">
+                        {{ result.findings | length }}
+                    </div>
+                    <div class="muted">Detected by available checks</div>
+                </article>
+
+                <article class="metric">
+                    <div class="metric-label">Critical Findings</div>
+                    {% set critical_count = result.findings
+                        | selectattr('severity', 'equalto', 'Critical')
+                        | list | length %}
+                    <div class="metric-value
+                        {% if critical_count > 0 %}score-low{% else %}score-good{% endif %}">
+                        {{ critical_count }}
+                    </div>
+                    <div class="muted">Critical severity</div>
+                </article>
+            </div>
+
+            <div class="findings-heading">
+                <h3>Category Scores</h3>
+                <span class="muted">Score out of 100</span>
+            </div>
+
+            <div class="category-grid">
+                {% for key, value in result.categories.items() %}
+                <article class="category">
+                    <div class="category-top">
+                        <span>
+                            {{ result.labels.get(key, key.replace('_', ' ').title()) }}
+                        </span>
+                        <span class="category-score">{{ value }}/100</span>
+                    </div>
+
+                    <div class="progress">
+                        <div class="progress-fill"
+                             style="width: {{ [[value, 0] | max, 100] | min }}%;">
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            {% if result.warnings %}
+            <div class="warning">
+                <strong>⚠ Partial analysis warnings</strong>
+                <ul>
+                    {% for warning in result.warnings %}
+                    <li>{{ warning }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="findings-heading">
+                <h3>Code Findings</h3>
+                <span class="finding-count">
+                    {{ result.findings | length }} finding(s)
+                </span>
+            </div>
+
+            {% if result.findings %}
+                {% for finding in result.findings %}
+                <article class="finding">
+
+                    <div class="finding-top">
+                        <span class="severity severity-{{ finding.severity | lower }}">
+                            {{ finding.severity }}
+                        </span>
+
+                        <span class="rule">{{ finding.rule }}</span>
+
+                        <span class="line-badge">
+                            Line {{ finding.line }}
+                        </span>
+                    </div>
+
+                    <p class="finding-message">
+                        {{ finding.message }}
+                    </p>
+
+                    <div class="finding-meta">
+                        Category:
+                        {{ result.labels.get(finding.category, finding.category) }}
+                        &nbsp;·&nbsp;
+                        Source: {{ finding.source }}
+                    </div>
+
+                    {% if finding.snippet %}
+                    <div class="snippet">{{ finding.snippet }}</div>
+                    {% endif %}
+
+                    {% if finding.fix %}
+                    <div class="fix">
+                        <strong>Suggested fix:</strong>
+                        {{ finding.fix }}
+                    </div>
+                    {% endif %}
+
+                </article>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <div style="font-size: 28px;">✓</div>
+                    <strong>No findings detected!</strong>
+                    <div>
+                        The configured checks did not report any issues.
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="buttons">
+                <form method="POST"
+                      action="{{ url_for('download', fmt='json') }}">
+                    <input type="hidden"
+                           name="result"
+                           value="{{ result_json }}">
+                    <button class="btn download-btn" type="submit">
+                        ↓ Download JSON
+                    </button>
+                </form>
+
+                <form method="POST"
+                      action="{{ url_for('download', fmt='txt') }}">
+                    <input type="hidden"
+                           name="result"
+                           value="{{ result_json }}">
+                    <button class="btn download-btn" type="submit">
+                        ↓ Download TXT
+                    </button>
+                </form>
+
+                <button class="btn new-review"
+                        type="button"
+                        id="newReviewBtn">
+                    + New Review
+                </button>
+            </div>
+
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="tips">
+        <article class="tip">
+            <div class="tip-icon">⌘</div>
+            <h3>Code Quality</h3>
+            <p>Review common code issues with the configured Ruff checks.</p>
+        </article>
+
+        <article class="tip">
+            <div class="tip-icon">⬡</div>
+            <h3>Security Analysis</h3>
+            <p>Inspect findings reported by the configured Bandit checks.</p>
+        </article>
+
+        <article class="tip">
+            <div class="tip-icon">↗</div>
+            <h3>Export Reports</h3>
+            <p>Save your analysis in JSON or plain-text format.</p>
+        </article>
+    </section>
+
+</main>
+
+<footer>
+    CodeLens AI · Python Code Review Workspace
+</footer>
+
+<script>
+(() => {
+    const form = document.getElementById("reviewForm");
+    const editor = document.getElementById("code");
+    const fileInput = document.getElementById("file");
+    const uploadZone = document.getElementById("uploadZone");
+    const selectedFile = document.getElementById("selectedFile");
+    const lineCount = document.getElementById("lineCount");
+    const reviewBtn = document.getElementById("reviewBtn");
+    const reviewBtnText = document.getElementById("reviewBtnText");
+
+    function updateLineCount() {
+        const count = editor.value.split("\n").length;
+        lineCount.textContent = count + (count === 1 ? " line" : " lines");
+    }
+
+    function resetPage() {
+        window.location.replace(window.location.pathname);
+    }
+
+    function showSelectedFile(file) {
+        if (!file) {
+            selectedFile.textContent = "";
+            selectedFile.style.display = "none";
+            return;
+        }
+
+        if (!file.name.toLowerCase().endsWith(".py")) {
+            alert("Please choose a Python (.py) file.");
+            fileInput.value = "";
+            selectedFile.textContent = "";
+            selectedFile.style.display = "none";
+            return;
+        }
+
+        selectedFile.textContent = "✓ Selected: " + file.name;
+        selectedFile.style.display = "block";
+
+        // Clear the editor so the uploaded file is the submitted input.
+        editor.value = "";
+        updateLineCount();
+    }
+
+    editor.addEventListener("input", () => {
+        updateLineCount();
+
+        // Prefer pasted code when the user starts typing.
+        if (editor.value.trim() && fileInput.files.length) {
+            fileInput.value = "";
+            showSelectedFile(null);
+        }
+    });
+
+    fileInput.addEventListener("change", () => {
+        showSelectedFile(fileInput.files[0]);
+    });
+
+    uploadZone.addEventListener("dragover", event => {
+        event.preventDefault();
+        uploadZone.classList.add("dragover");
+    });
+
+    uploadZone.addEventListener("dragleave", () => {
+        uploadZone.classList.remove("dragover");
+    });
+
+    uploadZone.addEventListener("drop", event => {
+        event.preventDefault();
+        uploadZone.classList.remove("dragover");
+
+        const file = event.dataTransfer.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith(".py")) {
+            alert("Please drop a Python (.py) file.");
+            return;
+        }
+
+        try {
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            fileInput.files = transfer.files;
+            fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+        } catch (error) {
+            alert("Please use the file picker to select your Python file.");
+        }
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", resetPage);
+
+    const newReviewBtn = document.getElementById("newReviewBtn");
+    if (newReviewBtn) {
+        newReviewBtn.addEventListener("click", resetPage);
+    }
+
+    form.addEventListener("submit", event => {
+        if (!editor.value.trim() && !fileInput.files.length) {
+            event.preventDefault();
+            alert("Please paste Python code or select a .py file.");
+            editor.focus();
+            return;
+        }
+
+        reviewBtn.disabled = true;
+        reviewBtnText.textContent = "Analyzing...";
+    });
+
+    updateLineCount();
+})();
+</script>
+
+<!-- Existing Flask service worker endpoint -->
 <script>
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
@@ -12,3 +1139,7 @@ if ("serviceWorker" in navigator) {
     });
 }
 </script>
+
+</body>
+</html>
+```
